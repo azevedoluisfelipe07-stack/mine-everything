@@ -42,36 +42,62 @@
 
     <!-- WORLDS MODAL -->
     <div id="modal-worlds" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-lg rounded-3xl border border-white/20 p-5 flex flex-col max-h-[90vh] shadow-2xl">
-            <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
+        <div class="glass-panel w-full max-w-2xl h-[85vh] rounded-3xl border border-white/20 p-5 flex flex-col shadow-2xl overflow-hidden">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b border-white/10 shrink-0">
                 <h2 class="text-xl font-bold text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-earth-americas"></i> Meus Mundos</h2>
                 <button id="close-worlds" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-300 active:bg-white/20"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-4 mb-4 shadow-inner">
-                <div class="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2.5 flex items-center gap-1.5"><i class="fa-solid fa-plus-circle"></i> Criar Novo Mundo</div>
-                <div class="flex flex-col gap-3">
-                    <input type="text" id="input-world-name" placeholder="Nome do mapa..." class="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-emerald-400">
-                    <div>
-                        <label class="text-[11px] font-semibold text-gray-300 block mb-1">Tipo de Terreno:</label>
-                        <div class="grid grid-cols-3 gap-1.5" id="world-type-selector">
-                            <button type="button" data-type="flat" class="w-type-btn py-1.5 px-2 bg-slate-800 rounded-xl text-[11px] font-bold border border-white/10 text-gray-300 hover:bg-slate-700">🧱 Plano</button>
-                            <button type="button" data-type="normal" class="w-type-btn py-1.5 px-2 bg-emerald-600 rounded-xl text-[11px] font-bold border border-emerald-400 text-white shadow">🌲 Normal</button>
-                            <button type="button" data-type="amplified" class="w-type-btn py-1.5 px-2 bg-slate-800 rounded-xl text-[11px] font-bold border border-white/10 text-gray-300 hover:bg-slate-700">⛰️ Alto (Amplificado)</button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-semibold text-gray-300 block mb-1">Biomas Permitidos:</label>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px]">
-                            <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded-xl border border-white/10 cursor-pointer"><input type="checkbox" id="biome-forest" checked class="accent-emerald-500 rounded"><span>🌳 Floresta</span></label>
-                            <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded-xl border border-white/10 cursor-pointer"><input type="checkbox" id="biome-desert" checked class="accent-amber-500 rounded"><span>🌵 Deserto</span></label>
-                            <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded-xl border border-white/10 cursor-pointer"><input type="checkbox" id="biome-snow" checked class="accent-cyan-400 rounded"><span>❄️ Neve</span></label>
-                            <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded-xl border border-white/10 cursor-pointer"><input type="checkbox" id="biome-mountains" checked class="accent-slate-400 rounded"><span>⛰️ Montanhas</span></label>
-                        </div>
-                    </div>
-                    <button id="btn-create-world" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-black text-xs tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 transition-transform active:scale-98"><i class="fa-solid fa-square-plus"></i> GERAR E JOGAR</button>
-                </div>
+            
+            <!-- TABS NAVIGATION -->
+            <div class="flex gap-2 mb-3 shrink-0">
+                <button id="tab-worlds-list" class="flex-1 py-2 bg-emerald-600 rounded-xl text-xs font-bold border border-emerald-400 text-white shadow transition-all">
+                    <i class="fa-solid fa-list mr-1"></i> Mundos Salvos
+                </button>
+                <button id="tab-create-world" class="flex-1 py-2 bg-slate-800 rounded-xl text-xs font-bold border border-white/10 text-gray-300 hover:bg-slate-700 transition-all">
+                    <i class="fa-solid fa-plus-circle mr-1"></i> Criar Novo Mundo
+                </button>
             </div>
-            <div id="worlds-list" class="flex flex-col gap-2.5 overflow-y-auto pr-1 max-h-[35vh]"></div>
+
+            <!-- VIEW: WORLD CREATION -->
+            <div id="view-create-world" class="hidden bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-4 shadow-inner overflow-y-auto flex-1 flex flex-col gap-3">
+                <div class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> Parâmetros do Novo Mundo</div>
+                
+                <div>
+                    <label class="text-[11px] font-semibold text-gray-300 block mb-1">Nome do Mapa:</label>
+                    <input type="text" id="input-world-name" placeholder="Ex: Meu Mundo Incrível..." class="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-semibold text-gray-300 block mb-1">Semente (Seed):</label>
+                    <input type="text" id="input-world-seed" placeholder="Ex: 12345, mineworld, terra_nova..." class="w-full bg-slate-950 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400">
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-semibold text-gray-300 block mb-1">Tipo de Terreno:</label>
+                    <div class="grid grid-cols-3 gap-1.5" id="world-type-selector">
+                        <button type="button" data-type="flat" class="w-type-btn py-2 px-2 bg-slate-800 rounded-xl text-[11px] font-bold border border-white/10 text-gray-300 hover:bg-slate-700">🧱 Plano</button>
+                        <button type="button" data-type="normal" class="w-type-btn py-2 px-2 bg-emerald-600 rounded-xl text-[11px] font-bold border border-emerald-400 text-white shadow">🌲 Normal</button>
+                        <button type="button" data-type="amplified" class="w-type-btn py-2 px-2 bg-slate-800 rounded-xl text-[11px] font-bold border border-white/10 text-gray-300 hover:bg-slate-700">⛰️ Amplificado</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-semibold text-gray-300 block mb-1">Biomas Ativos:</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px]">
+                        <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded-xl border border-white/10 cursor-pointer"><input type="checkbox" id="biome-forest" checked class="accent-emerald-500 rounded"><span>🌳 Floresta</span></label>
+                        <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded-xl border border-white/10 cursor-pointer"><input type="checkbox" id="biome-desert" checked class="accent-amber-500 rounded"><span>🌵 Deserto</span></label>
+                        <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded-xl border border-white/10 cursor-pointer"><input type="checkbox" id="biome-snow" checked class="accent-cyan-400 rounded"><span>❄️ Neve</span></label>
+                        <label class="flex items-center gap-1.5 bg-slate-800/80 p-2 rounded-xl border border-white/10 cursor-pointer"><input type="checkbox" id="biome-mountains" checked class="accent-slate-400 rounded"><span>⛰️ Montanhas</span></label>
+                    </div>
+                </div>
+
+                <button id="btn-create-world" class="mt-auto py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-black text-xs tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 transition-transform active:scale-98"><i class="fa-solid fa-square-plus"></i> GERAR MUNDO E JOGAR</button>
+            </div>
+
+            <!-- VIEW: WORLDS LIST -->
+            <div id="view-worlds-list" class="flex-1 overflow-y-auto pr-1 flex flex-col gap-2.5">
+                <div id="worlds-list" class="flex flex-col gap-2.5"></div>
+            </div>
         </div>
     </div>
 
@@ -98,12 +124,11 @@
         <div id="joystick-zone" class="fixed bottom-6 left-6 w-36 h-36 rounded-full glass-panel border-2 border-white/20 z-20 flex items-center justify-center touch-none cursor-grab active:cursor-grabbing shadow-2xl">
             <div id="joystick-knob" class="w-14 h-14 bg-white/40 border-2 border-white/80 rounded-full shadow-lg transition-transform duration-75 pointer-events-none"></div>
         </div>
-        <div class="fixed bottom-20 right-5 flex flex-col items-end gap-3 z-20 pointer-events-auto">
-            <div class="flex gap-3 items-center">
-                <button id="btn-fly" class="glass-panel w-12 h-12 rounded-2xl flex items-center justify-center text-cyan-300 active:bg-cyan-500/30 transition-all border border-white/20 text-xl font-bold shadow-lg"><i class="fa-solid fa-dove"></i></button>
-                <button id="btn-jump" class="glass-panel w-16 h-16 rounded-full flex items-center justify-center text-white active:bg-white/30 transition-all border-2 border-white/40 text-2xl font-bold shadow-xl"><i class="fa-solid fa-arrow-up"></i></button>
-            </div>
-            <div class="flex gap-3">
+        
+        <!-- Right side touch controls cluster -->
+        <div class="fixed bottom-6 right-5 flex gap-4 items-end z-20 pointer-events-auto">
+            <!-- Break & Place action buttons -->
+            <div class="flex flex-col gap-3">
                 <button id="btn-break" class="w-16 h-16 bg-rose-600/80 active:bg-rose-600 rounded-2xl flex flex-col items-center justify-center text-white border-2 border-rose-300 shadow-xl transition-transform active:scale-95">
                     <i class="fa-solid fa-hammer text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wider mt-0.5">Quebrar</span>
                 </button>
@@ -111,8 +136,20 @@
                     <i class="fa-solid fa-cubes text-xl"></i><span class="text-[9px] font-bold uppercase tracking-wider mt-0.5">Colocar</span>
                 </button>
             </div>
+
+            <!-- Vertical Movement Cluster: Fly toggle, Jump (Up Arrow), and Descend (Down Arrow stacked below) -->
+            <div class="flex flex-col items-center gap-3">
+                <button id="btn-fly" class="glass-panel w-12 h-12 rounded-2xl flex items-center justify-center text-cyan-300 active:bg-cyan-500/30 transition-all border border-white/20 text-xl font-bold shadow-lg"><i class="fa-solid fa-dove"></i></button>
+                
+                <!-- Seta para cima (Pular / Subir) -->
+                <button id="btn-jump" class="glass-panel w-16 h-16 rounded-full flex items-center justify-center text-white active:bg-white/30 transition-all border-2 border-white/40 text-2xl font-bold shadow-xl"><i class="fa-solid fa-arrow-up"></i></button>
+
+                <!-- Seta para baixo (Descender) posicionada debaixo da seta para cima e ampliada -->
+                <button id="btn-descend" class="glass-panel w-16 h-16 rounded-full flex items-center justify-center text-rose-300 active:bg-rose-500/30 transition-all border-2 border-white/40 text-2xl font-bold shadow-xl opacity-40 pointer-events-none"><i class="fa-solid fa-arrow-down"></i></button>
+            </div>
         </div>
     </div>
+    
     <div id="hud-hotbar" class="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 max-w-[95vw] pointer-events-auto hidden">
         <div id="hotbar" class="glass-panel px-2 py-1.5 rounded-2xl flex gap-1.5 border border-white/20 shadow-2xl overflow-x-auto"></div>
     </div>
@@ -267,6 +304,23 @@
 
         ['GRASS_TOP','GRASS_SIDE','DIRT','STONE','WOOD_SIDE','WOOD_TOP','LEAVES','SAND','WATER','GLASS','DIAMOND','GOLD','BRICK','TNT_SIDE','TNT_TOP','GLOWSTONE','BEDROCK','SNOW_TOP','SNOW_GRASS_SIDE','SNOW_LEAVES','CACTUS_SIDE','CACTUS_TOP','LIGHT_SNOW_TOP','LIGHT_SNOW_GRASS_SIDE','LIGHT_SNOW_LEAVES'].forEach(generateTextureCanvas);
 
+        function createCloudTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(0, 0, 0, 0)'; ctx.fillRect(0, 0, 64, 64);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            for (let x = 0; x < 64; x += 8) {
+                for (let y = 0; y < 64; y += 8) {
+                    if (Math.sin(x * 0.1) + Math.cos(y * 0.1) > 0.2) ctx.fillRect(x, y, 8, 8);
+                }
+            }
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.magFilter = texture.minFilter = THREE.NearestFilter;
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(16, 16);
+            return texture;
+        }
+
         function getBlockMaterials(type) {
             const def = BLOCK_DEFS[type] || BLOCK_DEFS[BLOCKS.STONE];
             const getMat = key => {
@@ -303,7 +357,7 @@
         const canvas = document.getElementById('game-canvas');
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
 
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x78a7ff);
@@ -313,49 +367,43 @@
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); scene.add(ambientLight);
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.85); dirLight.position.set(60, 120, 40); scene.add(dirLight);
 
-        const celestialGroup = new THREE.Group();
-        scene.add(celestialGroup);
+        const celestialGroup = new THREE.Group(); scene.add(celestialGroup);
 
-        // Sol (fog: false para ignorar a neblina do ambiente)
+        const cloudTexture = createCloudTexture();
+        const cloudGeo = new THREE.PlaneGeometry(1200, 1200);
+        const cloudMat = new THREE.MeshBasicMaterial({ map: cloudTexture, transparent: true, opacity: 0.75, depthWrite: false, side: THREE.DoubleSide });
+        const cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
+        cloudMesh.rotation.x = Math.PI / 2; cloudMesh.position.y = 52; scene.add(cloudMesh);
+
         const sunGeo = new THREE.BoxGeometry(22, 22, 22);
         const sunMat = new THREE.MeshBasicMaterial({ color: 0xffea00, fog: false });
-        const sunMesh = new THREE.Mesh(sunGeo, sunMat);
-        sunMesh.position.set(0, 200, 0);
-        celestialGroup.add(sunMesh);
+        const sunMesh = new THREE.Mesh(sunGeo, sunMat); sunMesh.position.set(0, 200, 0); celestialGroup.add(sunMesh);
 
-        // Lua (fog: false para ignorar a neblina do ambiente)
         const moonGeo = new THREE.BoxGeometry(18, 18, 18);
         const moonMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, fog: false });
-        const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-        moonMesh.position.set(0, -200, 0);
-        celestialGroup.add(moonMesh);
+        const moonMesh = new THREE.Mesh(moonGeo, moonMat); moonMesh.position.set(0, -200, 0); celestialGroup.add(moonMesh);
 
-        // Estrelas Noturnas
-        const starsGeo = new THREE.BufferGeometry();
-        const starPositions = [];
+        const starsGeo = new THREE.BufferGeometry(); const starPositions = [];
         for (let i = 0; i < 700; i++) {
-            const u = Math.random();
-            const v = Math.random();
-            const theta = u * 2.0 * Math.PI;
-            const phi = Math.acos(2.0 * v - 1.0);
-            const r = 260;
-            starPositions.push(
-                r * Math.sin(phi) * Math.cos(theta),
-                r * Math.sin(phi) * Math.sin(theta),
-                r * Math.cos(phi)
-            );
+            const u = Math.random(), v = Math.random(), theta = u * 2.0 * Math.PI, phi = Math.acos(2.0 * v - 1.0), r = 260;
+            starPositions.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
         }
         starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
         const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2.2, transparent: true, opacity: 0, fog: false });
-        const starsMesh = new THREE.Points(starsGeo, starsMat);
-        celestialGroup.add(starsMesh);
+        const starsMesh = new THREE.Points(starsGeo, starsMat); celestialGroup.add(starsMesh);
 
-        let celestialAngle = Math.PI * 0.35; // Ângulo inicial do Sol no céu
-
+        let celestialAngle = Math.PI * 0.35;
         const CHUNK_SIZE = 16, CHUNK_HEIGHT = 64, chunks = new Map(), chunkMeshesMap = new Map();
         let activeChunkMeshes = [], renderRadius = 2;
         const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
-        let activeWorld = { id: 'world_default', name: 'Mundo Survival', type: 'normal', biomes: { forest: true, desert: true, snow: true, mountains: true } };
+        let activeWorld = { id: 'world_default', name: 'Mundo Survival', seed: 'default', type: 'normal', biomes: { forest: true, desert: true, snow: true, mountains: true } };
+
+        function getSeedOffset(seed) {
+            if (!seed) return 0;
+            let hash = 0, str = String(seed);
+            for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash) + str.charCodeAt(i) | 0;
+            return (Math.abs(hash) % 20000);
+        }
 
         const getChunkKey = (cx, cz) => `${cx},${cz}`;
         function getBlock(x, y, z) {
@@ -396,10 +444,12 @@
             const chunk = new Uint8Array(CHUNK_SIZE * CHUNK_SIZE * CHUNK_HEIGHT), key = getChunkKey(cx, cz);
             chunks.set(key, chunk);
             const wType = activeWorld.type || 'normal', bConfig = activeWorld.biomes || { forest: true, desert: true, snow: true, mountains: true };
+            const seedOffset = getSeedOffset(activeWorld.seed);
 
             for (let lx = 0; lx < CHUNK_SIZE; lx++) {
                 for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-                    const gx = cx * CHUNK_SIZE + lx, gz = cz * CHUNK_SIZE + lz;
+                    const gx = cx * CHUNK_SIZE + lx + seedOffset;
+                    const gz = cz * CHUNK_SIZE + lz + seedOffset;
                     chunk[lx + lz * CHUNK_SIZE] = BLOCKS.BEDROCK;
 
                     if (wType === 'flat') {
@@ -408,13 +458,15 @@
                         continue;
                     }
 
-                    const hill1 = Math.sin(gx * 0.05) * Math.cos(gz * 0.05) * 6.0, hill2 = Math.sin(gx * 0.12 + 1.2) * Math.sin(gz * 0.12) * 3.5;
+                    const hill1 = Math.sin(gx * 0.05) * Math.cos(gz * 0.05) * 6.0;
+                    const hill2 = Math.sin(gx * 0.12 + 1.2) * Math.sin(gz * 0.12) * 3.5;
                     const ridge = bConfig.mountains ? Math.pow(Math.abs(Math.sin(gx * 0.03 + gz * 0.03)), 1.8) * 12.0 : 0;
                     let heightScale = wType === 'amplified' ? 2.2 : 1.0;
                     let height = Math.max(4, Math.min(CHUNK_HEIGHT - 10, Math.floor(12 + (hill1 + hill2 + ridge) * heightScale)));
 
                     const biomeNoise = Math.sin(gx * 0.02) + Math.cos(gz * 0.02);
-                    let isDesert = bConfig.desert && biomeNoise < -0.4, isSnow = bConfig.snow && biomeNoise > 0.45;
+                    let isDesert = bConfig.desert && biomeNoise < -0.4;
+                    let isSnow = bConfig.snow && biomeNoise > 0.45;
                     let isLightSnowTransition = bConfig.snow && biomeNoise >= 0.30 && biomeNoise <= 0.45;
                     let isMountainPeak = height > 20;
 
@@ -441,29 +493,31 @@
                     const forestGrad = Math.max(0, Math.min(1, (forestNoise - 0.45) / 0.15));
                     const plantSeed = (Math.sin(gx * 33.1 + gz * 17.7) + 1.0) / 2.0;
 
-                    // Taxa reduzida: plantSeed > 0.996 torna cactos bem mais raros e espalhados
+                    const realGx = cx * CHUNK_SIZE + lx;
+                    const realGz = cz * CHUNK_SIZE + lz;
+
                     if (isDesert && height >= 8 && plantSeed > 0.996 && lx >= 1 && lx <= CHUNK_SIZE - 2 && lz >= 1 && lz <= CHUNK_SIZE - 2) {
-                        for (let cy = 1; cy <= Math.floor(Math.random() * 2) + 2; cy++) setBlock(gx, height + cy, gz, BLOCKS.CACTUS);
+                        for (let cy = 1; cy <= Math.floor(Math.random() * 2) + 2; cy++) setBlock(realGx, height + cy, realGz, BLOCKS.CACTUS);
                     }
 
                     if ((isSnow || isLightSnowTransition) && height > 8 && forestGrad > 0.1 && plantSeed > (1.0 - 0.08 * forestGrad) && lx >= 2 && lx <= CHUNK_SIZE - 3 && lz >= 2 && lz <= CHUNK_SIZE - 3) {
                         const leafType = isSnow ? BLOCKS.SNOW_LEAVES : BLOCKS.LIGHT_SNOW_LEAVES;
-                        for (let ty = 1; ty <= 5; ty++) setBlock(gx, height + ty, gz, BLOCKS.WOOD);
+                        for (let ty = 1; ty <= 5; ty++) setBlock(realGx, height + ty, realGz, BLOCKS.WOOD);
                         for (let ly = 2; ly <= 6; ly++) {
                             const r = ly >= 5 ? 1 : (ly % 2 === 0 ? 2 : 1);
                             for (let lx2 = -r; lx2 <= r; lx2++) for (let lz2 = -r; lz2 <= r; lz2++) {
                                 if (Math.abs(lx2) === r && Math.abs(lz2) === r && r > 1) continue;
-                                if (getBlock(gx + lx2, height + ly, gz + lz2) === BLOCKS.AIR) setBlock(gx + lx2, height + ly, gz + lz2, leafType);
+                                if (getBlock(realGx + lx2, height + ly, realGz + lz2) === BLOCKS.AIR) setBlock(realGx + lx2, height + ly, realGz + lz2, leafType);
                             }
                         }
                     }
 
                     if (bConfig.forest && !isDesert && !isSnow && !isLightSnowTransition && !isMountainPeak && height > 8) {
                         if (forestGrad > 0.05 && plantSeed > (1.0 - 0.09 * forestGrad) && lx >= 2 && lx <= CHUNK_SIZE - 3 && lz >= 2 && lz <= CHUNK_SIZE - 3) {
-                            for (let ty = 1; ty <= 4; ty++) setBlock(gx, height + ty, gz, BLOCKS.WOOD);
+                            for (let ty = 1; ty <= 4; ty++) setBlock(realGx, height + ty, realGz, BLOCKS.WOOD);
                             for (let lx2 = -2; lx2 <= 2; lx2++) for (let lz2 = -2; lz2 <= 2; lz2++) for (let ly = 3; ly <= 5; ly++) {
                                 if (Math.abs(lx2) === 2 && Math.abs(lz2) === 2 && ly === 5) continue;
-                                if (getBlock(gx + lx2, height + ly, gz + lz2) === BLOCKS.AIR) setBlock(gx + lx2, height + ly, gz + lz2, BLOCKS.LEAVES);
+                                if (getBlock(realGx + lx2, height + ly, realGz + lz2) === BLOCKS.AIR) setBlock(realGx + lx2, height + ly, realGz + lz2, BLOCKS.LEAVES);
                             }
                         }
                     }
@@ -503,7 +557,9 @@
                         mesh.setMatrixAt(idx++, dummy.matrix);
                     }
                 }
-                mesh.instanceMatrix.needsUpdate = true; scene.add(mesh); newMeshes.push(mesh);
+                mesh.instanceMatrix.needsUpdate = true; 
+                mesh.matrixAutoUpdate = false;
+                scene.add(mesh); newMeshes.push(mesh);
             });
 
             chunkMeshesMap.set(key, newMeshes); updateRaycastTargets();
@@ -564,8 +620,12 @@
             for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) for (let dz = -r; dz <= r; dz++) scheduleWaterUpdate(x + dx, y + dy, z + dz);
         }
 
-        function tickWaterSimulation() {
+        let waterTickTimer = 0;
+        function tickWaterSimulation(now) {
             if (pendingWaterUpdates.size === 0) return;
+            if (now - waterTickTimer < 120) return;
+            waterTickTimer = now;
+
             const current = Array.from(pendingWaterUpdates); pendingWaterUpdates.clear();
             const affectedChunks = new Set();
 
@@ -647,6 +707,9 @@
             }
         }
 
+        let isJumpPressed = false;
+        let isDescendPressed = false;
+
         const player = { pos: new THREE.Vector3(8, 20, 8), vel: new THREE.Vector3(), yaw: 0, pitch: 0, height: 1.7, radius: 0.3, onGround: false, isFlying: false, speed: 0.11, sensitivity: 0.004 };
         camera.position.copy(player.pos);
 
@@ -656,14 +719,12 @@
             const key = getChunkKey(cx, cz);
             if (!chunks.has(key)) generateChunkData(cx, cz);
             
-            // Varre de cima para baixo buscando o primeiro bloco sólido do terreno
             for (let y = CHUNK_HEIGHT - 2; y >= 1; y--) {
                 const bGround = getBlock(bx, y, bz);
                 if (bGround !== BLOCKS.AIR && !isWater(bGround)) {
-                    // Garante espaço livre de 2 blocos na cabeça para não sufocar
                     setBlock(bx, y + 1, bz, BLOCKS.AIR);
                     setBlock(bx, y + 2, bz, BLOCKS.AIR);
-                    return y + 1; // Retorna altura do chão para os pés
+                    return y + 1;
                 }
             }
             return 12;
@@ -684,7 +745,6 @@
             const isBlocked = (bFeet !== BLOCKS.AIR && !isWater(bFeet)) || (bHead !== BLOCKS.AIR && !isWater(bHead));
             const isFloatingInAir = (bUnderFeet === BLOCKS.AIR && bFeet === BLOCKS.AIR);
 
-            // Se estiver preso em blocos ou flutuando alto demais no ar, recalcula no topo do terreno
             if (isBlocked || isFloatingInAir) {
                 const safeFeetY = getSafeSpawnY(x, z);
                 return safeFeetY + player.height;
@@ -699,7 +759,50 @@
             camera.position.copy(player.pos);
         }
 
-        // TOUCH & JOYSTICK LOGIC
+        function showHUD() {
+            ['crosshair', 'hud-top', 'hud-controls', 'hud-hotbar'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('hidden');
+            });
+        }
+
+        function hideHUD() {
+            ['crosshair', 'hud-top', 'hud-controls', 'hud-hotbar'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+        }
+
+        function saveCurrentPlayerPosition() {
+            if (!activeWorld) return;
+            activeWorld.lastPos = { x: player.pos.x, y: player.pos.y, z: player.pos.z };
+            const idx = savedWorlds.findIndex(w => w.id === activeWorld.id);
+            if (idx !== -1) savedWorlds[idx] = activeWorld;
+            else savedWorlds.push(activeWorld);
+            saveWorldsToStorage();
+        }
+
+        function loadWorld(w) {
+            activeWorld = w;
+            const titleEl = document.getElementById('current-world-title');
+            if (titleEl) titleEl.innerText = w.name;
+            
+            chunks.clear();
+            chunkMeshesMap.forEach((list, key) => removeChunkMesh(key));
+            chunkMeshesMap.clear();
+            if (globalWaterMesh) { scene.remove(globalWaterMesh); if (globalWaterMesh.geometry) globalWaterMesh.geometry.dispose(); globalWaterMesh = null; }
+
+            if (w.lastPos) {
+                player.pos.set(w.lastPos.x, w.lastPos.y, w.lastPos.z);
+                const safeY = ensureSafePosition(player.pos.x, player.pos.y, player.pos.z);
+                player.pos.y = safeY;
+                camera.position.copy(player.pos);
+            } else {
+                spawnPlayerSafely(8, 8);
+            }
+            rebuildWorldMeshes();
+        }
+
         let joystickInput = { x: 0, y: 0 }, joystickZone = document.getElementById('joystick-zone'), joystickKnob = document.getElementById('joystick-knob');
         let isJoystickDragging = false, joystickTouchId = null;
 
@@ -744,16 +847,23 @@
         const keys = {}; window.addEventListener('keydown', e => keys[e.code] = true); window.addEventListener('keyup', e => keys[e.code] = false);
 
         const raycaster = new THREE.Raycaster(); raycaster.far = 7; let targetBlock = null;
+        let raycastFrameCounter = 0;
+        const tempMatrix = new THREE.Matrix4();
+        const tempPos = new THREE.Vector3();
+
         function updateRaycast() {
+            raycastFrameCounter++;
+            if (raycastFrameCounter % 2 !== 0) return;
+
             raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
             const intersects = raycaster.intersectObjects(activeChunkMeshes);
             if (intersects.length > 0) {
                 const hit = intersects[0], normal = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).round();
                 let bx, by, bz;
                 if (hit.object.isInstancedMesh) {
-                    const m = new THREE.Matrix4(); hit.object.getMatrixAt(hit.instanceId, m);
-                    const pos = new THREE.Vector3().setFromMatrixPosition(m);
-                    bx = Math.floor(pos.x); by = Math.floor(pos.y); bz = Math.floor(pos.z);
+                    hit.object.getMatrixAt(hit.instanceId, tempMatrix);
+                    tempPos.setFromMatrixPosition(tempMatrix);
+                    bx = Math.floor(tempPos.x); by = Math.floor(tempPos.y); bz = Math.floor(tempPos.z);
                 } else {
                     const tp = hit.point.clone().sub(normal.clone().multiplyScalar(0.1));
                     bx = Math.floor(tp.x); by = Math.floor(tp.y); bz = Math.floor(tp.z);
@@ -829,8 +939,17 @@
             const spd = player.isFlying ? player.speed * 1.8 : player.speed;
             player.vel.x = moveDir.x * spd; player.vel.z = moveDir.z * spd;
 
-            if (player.isFlying) player.vel.y = (keys['Space'] ? spd : 0) - (keys['ShiftLeft'] ? spd : 0);
-            else player.vel.y -= 0.015;
+            if (player.isFlying) {
+                const flyVertSpd = spd * 1.1;
+                let flyUp = (keys['Space'] || isJumpPressed) ? flyVertSpd : 0;
+                let flyDown = (keys['ShiftLeft'] || isDescendPressed) ? flyVertSpd : 0;
+                player.vel.y = flyUp - flyDown;
+            } else {
+                player.vel.y -= 0.015;
+                if ((keys['Space'] || isJumpPressed) && player.onGround) {
+                    player.vel.y = 0.22;
+                }
+            }
 
             player.pos.x += player.vel.x; if (checkCollision()) { player.pos.x -= player.vel.x; player.vel.x = 0; }
             player.pos.z += player.vel.z; if (checkCollision()) { player.pos.z -= player.vel.z; player.vel.z = 0; }
@@ -906,33 +1025,31 @@
         function loadWorldsFromStorage() {
             try { const raw = localStorage.getItem('mine_everything_worlds'); if (raw) savedWorlds = JSON.parse(raw); } catch (e) { savedWorlds = []; }
             if (!Array.isArray(savedWorlds) || savedWorlds.length === 0) {
-                savedWorlds = [{ id: 'world_default', name: 'Mundo Sobrevivência', type: 'normal', biomes: { forest: true, desert: true, snow: true, mountains: true }, lastPos: null }];
+                savedWorlds = [{ id: 'world_default', name: 'Mundo Sobrevivência', seed: 'default_1', type: 'normal', biomes: { forest: true, desert: true, snow: true, mountains: true }, lastPos: null }];
                 saveWorldsToStorage();
             }
         }
         function saveWorldsToStorage() { try { localStorage.setItem('mine_everything_worlds', JSON.stringify(savedWorlds)); } catch (e) { console.error(e); } }
 
-        function saveCurrentPlayerPosition() {
-            if (!activeWorld) return;
-            const w = savedWorlds.find(x => x.id === activeWorld.id);
-            if (w) {
-                w.lastPos = { x: Math.round(player.pos.x * 100) / 100, y: Math.round(player.pos.y * 100) / 100, z: Math.round(player.pos.z * 100) / 100, yaw: Math.round(player.yaw * 1000) / 1000, pitch: Math.round(player.pitch * 1000) / 1000 };
-                saveWorldsToStorage();
-            }
-        }
-
         function renderWorldsList() {
             const list = document.getElementById('worlds-list'); if (!list) return; list.innerHTML = '';
             savedWorlds.forEach(w => {
-                const item = document.createElement('div'); item.className = 'p-3 bg-slate-900/80 border border-white/10 rounded-2xl flex justify-between items-center';
+                const item = document.createElement('div'); 
+                item.className = 'p-3.5 bg-slate-900/80 border border-white/10 rounded-2xl flex justify-between items-center hover:border-emerald-500/40 transition-all';
                 const pX = w.lastPos ? Math.round(w.lastPos.x) : 8, pY = w.lastPos ? Math.round(w.lastPos.y) : 'Auto', pZ = w.lastPos ? Math.round(w.lastPos.z) : 8;
-                item.innerHTML = `<div><div class="font-bold text-sm text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-cube"></i> ${w.name}</div><div class="text-[10px] text-gray-400">Tipo: ${w.type.toUpperCase()} &bull; Posição: [${pX}, ${pY}, ${pZ}]</div></div>`;
-                const btns = document.createElement('div'); btns.className = 'flex gap-2';
-                const btnPlay = document.createElement('button'); btnPlay.className = 'px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold text-white shadow active:scale-95'; btnPlay.innerText = 'Entrar';
+                const seedLabel = w.seed ? w.seed : 'Aleatória';
+                item.innerHTML = `
+                    <div class="flex-1 pr-2">
+                        <div class="font-bold text-sm text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-cube"></i> ${w.name}</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">Tipo: <span class="text-amber-300 font-semibold">${w.type.toUpperCase()}</span> &bull; Seed: <span class="text-cyan-300 font-mono">${seedLabel}</span></div>
+                        <div class="text-[10px] text-gray-500 font-mono">Posição: [${pX}, ${pY}, ${pZ}]</div>
+                    </div>`;
+                const btns = document.createElement('div'); btns.className = 'flex gap-2 shrink-0';
+                const btnPlay = document.createElement('button'); btnPlay.className = 'px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold text-white shadow active:scale-95 flex items-center gap-1.5'; btnPlay.innerHTML = '<i class="fa-solid fa-play"></i> Entrar';
                 btnPlay.addEventListener('click', () => { loadWorld(w); document.getElementById('modal-worlds').classList.add('hidden'); document.getElementById('start-menu').classList.add('hidden'); showHUD(); });
                 btns.appendChild(btnPlay);
                 if (savedWorlds.length > 1) {
-                    const btnDel = document.createElement('button'); btnDel.className = 'px-2.5 py-1.5 bg-rose-600/80 hover:bg-rose-600 rounded-xl text-xs font-bold text-white shadow active:scale-95'; btnDel.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                    const btnDel = document.createElement('button'); btnDel.className = 'px-3 py-2 bg-rose-600/80 hover:bg-rose-600 rounded-xl text-xs font-bold text-white shadow active:scale-95'; btnDel.innerHTML = '<i class="fa-solid fa-trash"></i>';
                     btnDel.addEventListener('click', () => { savedWorlds = savedWorlds.filter(x => x.id !== w.id); saveWorldsToStorage(); renderWorldsList(); showToast("Mundo removido!"); });
                     btns.appendChild(btnDel);
                 }
@@ -940,37 +1057,31 @@
             });
         }
 
-        function loadWorld(wObj) {
-            activeWorld = wObj; document.getElementById('current-world-title').innerText = wObj.name;
-            chunks.clear(); chunkMeshesMap.forEach(mList => mList.forEach(m => scene.remove(m))); chunkMeshesMap.clear(); activeChunkMeshes = [];
-            
-            if (wObj.lastPos && typeof wObj.lastPos.x === 'number' && typeof wObj.lastPos.z === 'number') {
-                const targetX = wObj.lastPos.x;
-                const targetZ = wObj.lastPos.z;
-                generateChunkData(Math.floor(targetX / CHUNK_SIZE), Math.floor(targetZ / CHUNK_SIZE));
-                
-                let targetY = wObj.lastPos.y;
-                if (typeof targetY !== 'number' || targetY <= 0) {
-                    targetY = getSafeSpawnY(targetX, targetZ) + player.height;
-                } else {
-                    targetY = ensureSafePosition(targetX, targetY, targetZ);
-                }
-
-                player.pos.set(targetX, targetY, targetZ);
-                if (typeof wObj.lastPos.yaw === 'number') player.yaw = wObj.lastPos.yaw;
-                if (typeof wObj.lastPos.pitch === 'number') player.pitch = wObj.lastPos.pitch;
-                player.vel.set(0, 0, 0); camera.position.copy(player.pos);
-            } else {
-                spawnPlayerSafely(8, 8);
-            }
-            rebuildWorldMeshes(); showToast(`Mundo "${wObj.name}" carregado!`);
-        }
-
-        const showHUD = () => ['crosshair','hud-top','hud-controls','hud-hotbar'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-        const hideHUD = () => ['crosshair','hud-top','hud-controls','hud-hotbar'].forEach(id => document.getElementById(id).classList.add('hidden'));
-
         function setupUIListeners() {
-            document.getElementById('btn-open-worlds').addEventListener('click', () => { renderWorldsList(); document.getElementById('modal-worlds').classList.remove('hidden'); });
+            const tabList = document.getElementById('tab-worlds-list');
+            const tabCreate = document.getElementById('tab-create-world');
+            const viewList = document.getElementById('view-worlds-list');
+            const viewCreate = document.getElementById('view-create-world');
+
+            function switchWorldTab(showCreate) {
+                if (showCreate) {
+                    tabCreate.className = 'flex-1 py-2 bg-emerald-600 rounded-xl text-xs font-bold border border-emerald-400 text-white shadow transition-all';
+                    tabList.className = 'flex-1 py-2 bg-slate-800 rounded-xl text-xs font-bold border border-white/10 text-gray-300 hover:bg-slate-700 transition-all';
+                    viewCreate.classList.remove('hidden');
+                    viewList.classList.add('hidden');
+                } else {
+                    tabList.className = 'flex-1 py-2 bg-emerald-600 rounded-xl text-xs font-bold border border-emerald-400 text-white shadow transition-all';
+                    tabCreate.className = 'flex-1 py-2 bg-slate-800 rounded-xl text-xs font-bold border border-white/10 text-gray-300 hover:bg-slate-700 transition-all';
+                    viewList.classList.remove('hidden');
+                    viewCreate.classList.add('hidden');
+                    renderWorldsList();
+                }
+            }
+
+            tabList.addEventListener('click', () => switchWorldTab(false));
+            tabCreate.addEventListener('click', () => switchWorldTab(true));
+
+            document.getElementById('btn-open-worlds').addEventListener('click', () => { switchWorldTab(false); document.getElementById('modal-worlds').classList.remove('hidden'); });
             document.getElementById('btn-menu-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.remove('hidden'));
             document.getElementById('close-worlds').addEventListener('click', () => document.getElementById('modal-worlds').classList.add('hidden'));
             document.getElementById('close-inventory').addEventListener('click', () => document.getElementById('modal-inventory').classList.add('hidden'));
@@ -997,17 +1108,27 @@
             let selectedType = 'normal';
             document.querySelectorAll('#world-type-selector button').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    document.querySelectorAll('#world-type-selector button').forEach(b => b.className = 'w-type-btn py-1.5 px-2 bg-slate-800 rounded-xl text-[11px] font-bold border border-white/10 text-gray-300 hover:bg-slate-700');
-                    btn.className = 'w-type-btn py-1.5 px-2 bg-emerald-600 rounded-xl text-[11px] font-bold border border-emerald-400 text-white shadow';
+                    document.querySelectorAll('#world-type-selector button').forEach(b => b.className = 'w-type-btn py-2 px-2 bg-slate-800 rounded-xl text-[11px] font-bold border border-white/10 text-gray-300 hover:bg-slate-700');
+                    btn.className = 'w-type-btn py-2 px-2 bg-emerald-600 rounded-xl text-[11px] font-bold border border-emerald-400 text-white shadow';
                     selectedType = btn.getAttribute('data-type');
                 });
             });
 
             document.getElementById('btn-create-world').addEventListener('click', () => {
-                const nameInput = document.getElementById('input-world-name'), name = nameInput.value.trim() || `Mundo ${savedWorlds.length + 1}`; nameInput.value = '';
+                const nameInput = document.getElementById('input-world-name');
+                const seedInput = document.getElementById('input-world-seed');
+                const name = nameInput.value.trim() || `Mundo ${savedWorlds.length + 1}`;
+                const seed = seedInput.value.trim() || String(Math.floor(Math.random() * 999999));
+                nameInput.value = ''; seedInput.value = '';
+
                 const newWorld = {
-                    id: 'world_' + Date.now(), name, type: selectedType,
-                    biomes: { forest: document.getElementById('biome-forest').checked, desert: document.getElementById('biome-desert').checked, snow: document.getElementById('biome-snow').checked, mountains: document.getElementById('biome-mountains').checked },
+                    id: 'world_' + Date.now(), name, seed, type: selectedType,
+                    biomes: { 
+                        forest: document.getElementById('biome-forest').checked, 
+                        desert: document.getElementById('biome-desert').checked, 
+                        snow: document.getElementById('biome-snow').checked, 
+                        mountains: document.getElementById('biome-mountains').checked 
+                    },
                     lastPos: null
                 };
                 savedWorlds.push(newWorld); saveWorldsToStorage(); loadWorld(newWorld);
@@ -1016,16 +1137,40 @@
 
             document.getElementById('btn-break').addEventListener('click', doBreakBlock);
             document.getElementById('btn-place').addEventListener('click', doPlaceBlock);
-            document.getElementById('btn-jump').addEventListener('click', () => { if (player.onGround || player.isFlying) player.vel.y = 0.22; });
+
+            const btnJump = document.getElementById('btn-jump');
+            const btnDescend = document.getElementById('btn-descend');
+
+            const startJump = e => { e.preventDefault(); isJumpPressed = true; };
+            const stopJump = e => { e.preventDefault(); isJumpPressed = false; };
+            btnJump.addEventListener('touchstart', startJump, { passive: false });
+            btnJump.addEventListener('touchend', stopJump);
+            btnJump.addEventListener('mousedown', startJump);
+            btnJump.addEventListener('mouseup', stopJump);
+
+            const startDescend = e => { e.preventDefault(); isDescendPressed = true; };
+            const stopDescend = e => { e.preventDefault(); isDescendPressed = false; };
+            btnDescend.addEventListener('touchstart', startDescend, { passive: false });
+            btnDescend.addEventListener('touchend', stopDescend);
+            btnDescend.addEventListener('mousedown', startDescend);
+            btnDescend.addEventListener('mouseup', stopDescend);
+
             document.getElementById('btn-fly').addEventListener('click', () => {
                 player.isFlying = !player.isFlying;
                 const flyBtn = document.getElementById('btn-fly');
-                if (player.isFlying) { flyBtn.classList.add('bg-cyan-500/50', 'border-cyan-300'); showToast("Modo Voo Ativado"); }
-                else { flyBtn.classList.remove('bg-cyan-500/50', 'border-cyan-300'); showToast("Modo Voo Desativado"); }
+                if (player.isFlying) { 
+                    flyBtn.classList.add('bg-cyan-500/50', 'border-cyan-300');
+                    btnDescend.classList.remove('opacity-40', 'pointer-events-none');
+                    showToast("Modo Voo Ativado"); 
+                } else { 
+                    flyBtn.classList.remove('bg-cyan-500/50', 'border-cyan-300');
+                    btnDescend.classList.add('opacity-40', 'pointer-events-none');
+                    showToast("Modo Voo Desativado"); 
+                }
             });
 
             document.getElementById('btn-time').addEventListener('click', () => {
-                celestialAngle += Math.PI; // Avança 180 graus (inverte dia/noite)
+                celestialAngle += Math.PI;
                 const isDay = Math.sin(celestialAngle) > 0;
                 document.getElementById('btn-time').innerHTML = isDay ? '<i class="fa-solid fa-sun text-lg"></i>' : '<i class="fa-solid fa-moon text-lg"></i>';
                 showToast(isDay ? "Alternado para Dia" : "Alternado para Noite");
@@ -1048,15 +1193,19 @@
                 if (activeWorld && document.getElementById('start-menu').classList.contains('hidden')) saveCurrentPlayerPosition();
             }
 
-            celestialAngle += 0.00005; // Rotação contínua e suave do céu
+            cloudTexture.offset.x += 0.00008;
+            cloudTexture.offset.y += 0.00004;
+
+            celestialAngle += 0.00005;
             celestialGroup.rotation.x = celestialAngle;
-            celestialGroup.position.copy(player.pos); // Mantém o grupo centralizado no jogador
+            celestialGroup.position.copy(player.pos);
+            cloudMesh.position.x = player.pos.x;
+            cloudMesh.position.z = player.pos.z;
 
             const sunWorldPos = new THREE.Vector3();
             sunMesh.getWorldPosition(sunWorldPos);
             dirLight.position.copy(sunWorldPos);
 
-            // Ajusta a iluminação e a cor do céu com base na altura relativa do Sol
             const sunY = sunWorldPos.y - player.pos.y;
             const dayFactor = Math.max(0, Math.min(1, (sunY + 40) / 200));
             const skyColor = new THREE.Color(0x02040a).lerp(new THREE.Color(0x78a7ff), dayFactor);
@@ -1065,10 +1214,9 @@
             dirLight.intensity = 0.12 + 0.78 * dayFactor;
             ambientLight.intensity = 0.18 + 0.52 * dayFactor;
 
-            // Transição suave da opacidade das estrelas durante a noite
             starsMat.opacity = Math.max(0, Math.min(1, (0.45 - dayFactor) * 2.5));
 
-            updatePlayerPhysics(); updateRaycast(); updateParticles(); tickWaterSimulation();
+            updatePlayerPhysics(); updateRaycast(); updateParticles(); tickWaterSimulation(now);
 
             const camX = Math.floor(camera.position.x), camY = Math.floor(camera.position.y), camZ = Math.floor(camera.position.z);
             const overlay = document.getElementById('underwater-overlay');
