@@ -657,7 +657,7 @@
         let waterTickTimer = 0;
         function tickWaterSimulation(now) {
             if (pendingWaterUpdates.size === 0) return;
-            if (now - waterTickTimer < 120) return;
+            if (now - waterTickTimer < 300) return;
             waterTickTimer = now;
  
             const current = Array.from(pendingWaterUpdates); pendingWaterUpdates.clear();
@@ -666,14 +666,24 @@
             current.forEach(key => {
                 const [x, y, z] = key.split(',').map(Number), b = getBlock(x, y, z), isSource = (b === BLOCKS.WATER);
                 let targetLevel = 0, bAbove = getBlock(x, y + 1, z);
-                if (isWater(bAbove) || isSource) targetLevel = 8;
+                if (isSource) {
+    targetLevel = 8;
+} else if (bAbove === BLOCKS.WATER) {
+    targetLevel = 8;
+}
                 else {
                     let maxSide = 0;
                     [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz]) => {
                         const nb = getBlock(x + dx, y, z + dz);
                         if (isWater(nb)) maxSide = Math.max(maxSide, getWaterLevel(nb));
                     });
-                    if (maxSide > 4) targetLevel = maxSide - 1;
+                    if (maxSide > 4) {
+    targetLevel = maxSide - 1;
+
+    // impede que a água continue depois de 5 blocos
+    if (targetLevel < 4)
+        targetLevel = 0;
+              }
                 }
                 if (b === BLOCKS.AIR || isWater(b)) {
                     const targetType = targetLevel > 0 ? getWaterBlockType(targetLevel) : BLOCKS.AIR;
@@ -692,7 +702,11 @@
                     if (y > 0 && (getBlock(x, y - 1, z) === BLOCKS.AIR || (isWater(getBlock(x, y - 1, z)) && getWaterLevel(getBlock(x, y - 1, z)) < 8))) {
                         scheduleWaterUpdate(x, y - 1, z);
                     }
-                    if (level > 4 && (y > 0 ? getBlock(x, y - 1, z) : BLOCKS.BEDROCK) !== BLOCKS.AIR) {
+                    if (
+    level > 4 &&
+    level - 1 >= 4 &&
+    (y > 0 ? getBlock(x, y - 1, z) : BLOCKS.BEDROCK) !== BLOCKS.AIR
+                        ) {
                         [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz]) => {
                             const nb = getBlock(x + dx, y, z + dz);
                             if (nb === BLOCKS.AIR || (isWater(nb) && getWaterLevel(nb) < level - 1)) scheduleWaterUpdate(x + dx, y, z + dz);
