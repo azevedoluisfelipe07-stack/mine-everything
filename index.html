@@ -795,26 +795,102 @@
  
         const selectionBox = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.BoxGeometry(1.01, 1.01, 1.01)), new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 }));
         selectionBox.visible = false; scene.add(selectionBox);
- 
-        let particles = [];
-        function createBreakParticles(x, y, z, colorHex) {
-            const pGeo = new THREE.BoxGeometry(0.12, 0.12, 0.12), pMat = new THREE.MeshBasicMaterial({ color: colorHex });
-            for (let i = 0; i < 10; i++) {
-                const p = new THREE.Mesh(pGeo, pMat);
-                p.position.set(x + 0.5, y + 0.5, z + 0.5);
-                p.userData = { vx: (Math.random() - 0.5) * 0.14, vy: Math.random() * 0.18, vz: (Math.random() - 0.5) * 0.14, life: 1.0 };
-                scene.add(p); particles.push(p);
-            }
+        const MAX_PARTICLES = 300;
+
+const particleGeometry = new THREE.BoxGeometry(0.12, 0.12, 0.12);
+
+const particlePool = [];
+
+for (let i = 0; i < MAX_PARTICLES; i++) {
+
+    const mesh = new THREE.Mesh(
+        particleGeometry,
+        new THREE.MeshBasicMaterial()
+    );
+
+    mesh.visible = false;
+
+    mesh.userData = {
+        active: false,
+        vx: 0,
+        vy: 0,
+        vz: 0,
+        life: 0
+    };
+
+    scene.add(mesh);
+
+    particlePool.push(mesh);
+
+}
+function createBreakParticles(x, y, z, colorHex) {
+
+    let spawned = 0;
+
+    for (let i = 0; i < particlePool.length; i++) {
+
+        if (spawned >= 10) break;
+
+        const p = particlePool[i];
+
+        if (p.userData.active)
+            continue;
+
+        p.visible = true;
+
+        p.material.color.setHex(colorHex);
+
+        p.position.set(
+            x + 0.5,
+            y + 0.5,
+            z + 0.5
+        );
+
+        p.scale.set(1, 1, 1);
+
+        p.userData.active = true;
+
+        p.userData.vx = (Math.random() - 0.5) * 0.14;
+        p.userData.vy = Math.random() * 0.18;
+        p.userData.vz = (Math.random() - 0.5) * 0.14;
+
+        p.userData.life = 1;
+
+        spawned++;
+
+    }
+
+}
+   function updateParticles() {
+
+    for (let i = 0; i < particlePool.length; i++) {
+
+        const p = particlePool[i];
+
+        if (!p.userData.active)
+            continue;
+
+        p.position.x += p.userData.vx;
+        p.position.y += p.userData.vy;
+        p.position.z += p.userData.vz;
+
+        p.userData.vy -= 0.01;
+
+        p.userData.life -= 0.06;
+
+        p.scale.multiplyScalar(0.92);
+
+        if (p.userData.life <= 0) {
+
+            p.userData.active = false;
+
+            p.visible = false;
+
         }
- 
-        function updateParticles() {
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.position.x += p.userData.vx; p.position.y += p.userData.vy; p.position.z += p.userData.vz;
-                p.userData.vy -= 0.01; p.userData.life -= 0.06; p.scale.multiplyScalar(0.92);
-                if (p.userData.life <= 0) { scene.remove(p); particles.splice(i, 1); }
-            }
-        }
+
+    }
+
+}
  
         let isJumpPressed = false;
         let isDescendPressed = false;
@@ -1107,7 +1183,7 @@
                 slot.appendChild(pCanvas);
                 const label = document.createElement('span'); label.className = 'text-[9px] font-bold text-gray-300 mt-0.5 truncate max-w-[44px]';
                 label.innerText = (BLOCK_DEFS[bType] || { name: 'Bloco' }).name; slot.appendChild(label);
-                slot.addEventListener('click', () => { selectedHotbarIndex = idx; renderHotbar(); });
+                slot.addEventListener('touchstart', () => { selectedHotbarIndex = idx; renderHotbar(); });
                 hotbarEl.appendChild(slot);
             });
         }
@@ -1122,7 +1198,7 @@
                 if (textureCache[key] && textureCache[key].canvas) pCanvas.getContext('2d').drawImage(textureCache[key].canvas, 0, 0, 32, 32);
                 card.appendChild(pCanvas);
                 const name = document.createElement('span'); name.className = 'text-[11px] font-bold text-gray-200 text-center truncate w-full'; name.innerText = def.name; card.appendChild(name);
-                card.addEventListener('click', () => {
+                card.addEventListener('touchstart', () => {
                     hotbarSlots[selectedHotbarIndex] = bType; renderHotbar();
                     document.getElementById('modal-inventory').classList.add('hidden');
                     showToast(`Equipado ${def.name} no Slot ${selectedHotbarIndex + 1}!`);
@@ -1251,8 +1327,8 @@
                 document.getElementById('modal-worlds').classList.add('hidden'); document.getElementById('start-menu').classList.add('hidden'); showHUD();
             });
  
-            document.getElementById('btn-break').addEventListener('click', doBreakBlock);
-            document.getElementById('btn-place').addEventListener('click', doPlaceBlock);
+            document.getElementById('btn-break').addEventListener('touchstart', doBreakBlock);
+            document.getElementById('btn-place').addEventListener('touchstart', doPlaceBlock);
  
             const btnJump = document.getElementById('btn-jump');
             const btnDescend = document.getElementById('btn-descend');
@@ -1266,7 +1342,7 @@
  
             const startDescend = e => { e.preventDefault(); isDescendPressed = true; };
             const stopDescend = e => { e.preventDefault(); isDescendPressed = false; };
-            btnDescend.addEventListener('touchstart', startDescend, { passive: false });
+            btnDescend.addEventListener('click', startDescend, { passive: false });
             btnDescend.addEventListener('touchend', stopDescend);
             btnDescend.addEventListener('mousedown', startDescend);
             btnDescend.addEventListener('mouseup', stopDescend);
@@ -1285,7 +1361,7 @@
                 }
             });
  
-            document.getElementById('btn-time').addEventListener('click', () => {
+            document.getElementById('btn-time').addEventListener('touchstart', () => {
                 celestialAngle += Math.PI;
                 const isDay = Math.sin(celestialAngle) > 0;
                 document.getElementById('btn-time').innerHTML = isDay ? '<i class="fa-solid fa-sun text-lg"></i>' : '<i class="fa-solid fa-moon text-lg"></i>';
