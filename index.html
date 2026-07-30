@@ -165,35 +165,40 @@
             <div id="inventory-grid" class="grid grid-cols-4 gap-3 overflow-y-auto pr-1 pb-2"></div>
         </div>
     </div>
-    <div id="modal-settings" class="fixed inset-0 bg-black/75 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-sm rounded-3xl border border-white/20 p-5 flex flex-col gap-4 shadow-2xl">
-            <div class="flex justify-between items-center border-b border-white/10 pb-2">
-                <h2 class="text-xl font-bold text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Configurações</h2>
+    <div id="modal-settings" class="fixed inset-0 bg-black/75 backdrop-blur-md z-[60] hidden flex items-center justify-center p-2 sm:p-4">
+        <div class="glass-panel w-full max-w-[92vw] sm:max-w-sm max-h-[82vh] rounded-2xl border border-white/20 p-3 sm:p-4 flex flex-col gap-3 shadow-2xl overflow-hidden">
+            <div class="flex justify-between items-center border-b border-white/10 pb-2 shrink-0">
+                <h2 class="text-lg sm:text-xl font-bold text-cyan-400 flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Configurações</h2>
                 <button id="close-settings" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-300 active:bg-white/20"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="flex flex-col gap-3 text-sm">
+            <div class="flex-1 overflow-y-auto pr-1 flex flex-col gap-3 text-sm">
                 <div>
-                    <label class="text-xs font-semibold text-gray-300 mb-1 block">Sensibilidade do Olhar</label>
+                    <label class="text-[11px] sm:text-xs font-semibold text-gray-300 mb-1 block">Sensibilidade do Olhar</label>
                     <input type="range" id="sensitivity-slider" min="1" max="10" value="5" class="w-full accent-cyan-400">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-300 mb-1 block">Alcance de Visão (Chunks)</label>
+                    <label class="text-[11px] sm:text-xs font-semibold text-gray-300 mb-1 block">Alcance de Visão (Chunks)</label>
                     <input type="range" id="render-dist-slider" min="1" max="10" value="2" class="w-full accent-cyan-400">
-                    <div class="text-[10px] text-amber-300/80 mt-0.5">Acima de 6: use com Neblina Alta/Ultra em celulares fracos</div>
+                    <div class="text-[10px] text-amber-300/80 mt-0.5">Mais alto = mais mundo carregado</div>
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-300 mb-1 block">Densidade da Neblina</label>
+                    <label class="text-[11px] sm:text-xs font-semibold text-gray-300 mb-1 block">Resolução do Jogo</label>
+                    <input type="range" id="resolution-slider" min="1" max="10" value="10" class="w-full accent-cyan-400">
+                    <div class="flex justify-between text-[10px] text-gray-400 mt-0.5"><span>Baixa</span><span id="resolution-value">10</span><span>Máxima</span></div>
+                </div>
+                <div>
+                    <label class="text-[11px] sm:text-xs font-semibold text-gray-300 mb-1 block">Densidade da Neblina</label>
                     <input type="range" id="fog-density-slider" min="0" max="4" value="1" class="w-full accent-cyan-400">
                     <div class="flex justify-between text-[10px] text-gray-400 mt-0.5"><span>Off</span><span>Baixa</span><span>Média</span><span>Alta</span><span>Ultra</span></div>
                 </div>
-                <div class="flex justify-between items-center pt-2">
-                    <span class="text-xs font-semibold text-gray-300">Sons de Blocos</span>
+                <div class="flex justify-between items-center pt-1">
+                    <span class="text-[11px] sm:text-xs font-semibold text-gray-300">Sons de Blocos</span>
                     <button id="btn-toggle-sound" class="px-3 py-1 bg-emerald-600/80 rounded-lg text-xs font-bold">LIGADO</button>
                 </div>
             </div>
-            <div class="mt-2 pt-3 border-t border-white/10 flex flex-col gap-2">
-                <button id="btn-save-world" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-98 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2"><i class="fa-solid fa-floppy-disk"></i> Salvar Posição e Mundo</button>
-                <button id="btn-back-menu" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 active:scale-98 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2 text-gray-200"><i class="fa-solid fa-house"></i> Voltar ao Menu Principal</button>
+            <div class="pt-2 border-t border-white/10 flex flex-col gap-2 shrink-0">
+                <button id="btn-save-world" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-98 rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2"><i class="fa-solid fa-floppy-disk"></i> Salvar Posição e Mundo</button>
+                <button id="btn-back-menu" class="w-full py-2 bg-slate-700 hover:bg-slate-600 active:scale-98 rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2 text-gray-200"><i class="fa-solid fa-house"></i> Voltar ao Menu Principal</button>
             </div>
         </div>
     </div>
@@ -410,6 +415,7 @@
         let activeChunkMeshes = [], renderRadius = 2;
         const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
         let activeWorld = { id: 'world_default', name: 'Mundo Survival', seed: 'default', type: 'normal', biomes: { forest: true, desert: true, snow: true, mountains: true } };
+        let worldChanges = new Map(), worldChangesByChunk = new Map();
  
         function getSeedOffset(seed) {
             if (!seed) return 0;
@@ -419,6 +425,59 @@
         }
  
         const getChunkKey = (cx, cz) => `${cx},${cz}`;
+        const getBlockChangeKey = (x, y, z) => `${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`;
+
+        function indexWorldChange(blockKey, type) {
+            const [x, y, z] = blockKey.split(',').map(Number);
+            const chunkKey = getChunkKey(Math.floor(x / CHUNK_SIZE), Math.floor(z / CHUNK_SIZE));
+            let chunkChanges = worldChangesByChunk.get(chunkKey);
+            if (!chunkChanges) { chunkChanges = new Map(); worldChangesByChunk.set(chunkKey, chunkChanges); }
+            chunkChanges.set(blockKey, Number(type));
+        }
+
+        function rebuildWorldChangeIndex() {
+            worldChangesByChunk.clear();
+            worldChanges.forEach((type, blockKey) => indexWorldChange(blockKey, type));
+        }
+
+        function loadWorldChangesFromActiveWorld() {
+            worldChanges.clear();
+            const rawChanges = activeWorld && activeWorld.worldChanges;
+            if (rawChanges && typeof rawChanges === 'object') {
+                Object.entries(rawChanges).forEach(([blockKey, type]) => {
+                    const numericType = Number(type);
+                    if (Number.isFinite(numericType)) worldChanges.set(blockKey, numericType);
+                });
+            }
+            rebuildWorldChangeIndex();
+        }
+
+        function syncWorldChangesToActiveWorld() {
+            if (!activeWorld) return;
+            activeWorld.worldChanges = Object.fromEntries(worldChanges);
+        }
+
+        function recordWorldBlockChange(x, y, z, type) {
+            if (!activeWorld) return;
+            const blockKey = getBlockChangeKey(x, y, z);
+            const numericType = Number(type);
+            worldChanges.set(blockKey, numericType);
+            indexWorldChange(blockKey, numericType);
+        }
+
+        function applyWorldChangesToChunk(cx, cz) {
+            const key = getChunkKey(cx, cz);
+            const chunk = chunks.get(key);
+            const changes = worldChangesByChunk.get(key);
+            if (!chunk || !changes) return;
+            changes.forEach((type, blockKey) => {
+                const [x, y, z] = blockKey.split(',').map(Number);
+                if (y < 0 || y >= CHUNK_HEIGHT) return;
+                const lx = ((x % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                const lz = ((z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+                chunk[lx + lz * CHUNK_SIZE + y * CHUNK_SIZE * CHUNK_SIZE] = type;
+            });
+        }
  
         // OTIMIZAÇÃO: cache de 1 chunk. getBlock() é a função mais chamada do jogo (dezenas de
         // milhares de vezes a cada chunk construído) e antes fazia sempre um lookup em Map com
@@ -442,13 +501,14 @@
             return chunk[lx + lz * CHUNK_SIZE + y * CHUNK_SIZE * CHUNK_SIZE];
         }
  
-        function setBlock(x, y, z, type) {
+        function setBlock(x, y, z, type, saveChange = false) {
             if (y < 0 || y >= CHUNK_HEIGHT) return;
             const key = getChunkKey(Math.floor(x / CHUNK_SIZE), Math.floor(z / CHUNK_SIZE));
             let chunk = chunks.get(key);
             if (!chunk) { chunk = new Uint8Array(CHUNK_SIZE * CHUNK_SIZE * CHUNK_HEIGHT); chunks.set(key, chunk); }
             const lx = ((x % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE, lz = ((z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
             chunk[lx + lz * CHUNK_SIZE + y * CHUNK_SIZE * CHUNK_SIZE] = type;
+            if (saveChange) recordWorldBlockChange(x, y, z, type);
         }
  
         function isFaceExposed(x, y, z, type) {
@@ -551,6 +611,7 @@
                     }
                 }
             }
+            applyWorldChangesToChunk(cx, cz);
         }
  
         const WATER_FACES = [
@@ -895,7 +956,7 @@ function createBreakParticles(x, y, z, colorHex) {
         let isJumpPressed = false;
         let isDescendPressed = false;
  
-        const player = { pos: new THREE.Vector3(8, 20, 8), vel: new THREE.Vector3(), yaw: 0, pitch: 0, height: 1.7, radius: 0.3, onGround: false, isFlying: false, speed: 0.11, sensitivity: 0.004 };
+        const player = { pos: new THREE.Vector3(8, 20, 8), vel: new THREE.Vector3(), yaw: 0, pitch: 0, height: 1.7, radius: 0.3, onGround: false, isFlying: false, speed: 0.11, sensitivity: 0.004, health: 100, hunger: 100 };
         camera.position.copy(player.pos);
  
         function getSafeSpawnY(x, z) {
@@ -958,9 +1019,66 @@ function createBreakParticles(x, y, z, colorHex) {
             });
         }
  
+        function getCurrentGameSettings() {
+            const sensitivitySlider = document.getElementById('sensitivity-slider');
+            const renderSlider = document.getElementById('render-dist-slider');
+            const fogSlider = document.getElementById('fog-density-slider');
+            return {
+                sensitivityLevel: sensitivitySlider ? parseFloat(sensitivitySlider.value) : 5,
+                renderRadius: renderSlider ? parseInt(renderSlider.value) : renderRadius,
+                fogDensityLevel: fogSlider ? parseInt(fogSlider.value) : 1,
+                soundEnabled: sounds.enabled,
+                resolutionLevel: userResLevel
+            };
+        }
+
+        function updateSoundButton() {
+            const soundBtn = document.getElementById('btn-toggle-sound');
+            if (!soundBtn) return;
+            soundBtn.innerText = sounds.enabled ? 'LIGADO' : 'DESLIGADO';
+            soundBtn.className = sounds.enabled ? 'px-3 py-1 bg-emerald-600/80 rounded-lg text-xs font-bold' : 'px-3 py-1 bg-rose-600/80 rounded-lg text-xs font-bold';
+        }
+
+        function applyWorldSettings(settings) {
+            if (!settings) return;
+            const sensitivitySlider = document.getElementById('sensitivity-slider');
+            const renderSlider = document.getElementById('render-dist-slider');
+            const fogSlider = document.getElementById('fog-density-slider');
+
+            if (Number.isFinite(settings.sensitivityLevel)) {
+                const level = Math.max(1, Math.min(10, settings.sensitivityLevel));
+                if (sensitivitySlider) sensitivitySlider.value = level;
+                player.sensitivity = (level / 5) * 0.004;
+            }
+            if (Number.isFinite(settings.renderRadius)) {
+                renderRadius = Math.max(1, Math.min(10, parseInt(settings.renderRadius)));
+                if (renderSlider) renderSlider.value = renderRadius;
+            }
+            if (Number.isFinite(settings.fogDensityLevel)) {
+                const fogLevel = Math.max(0, Math.min(4, parseInt(settings.fogDensityLevel)));
+                if (fogSlider) fogSlider.value = fogLevel;
+                scene.fog.density = [0, 0.01, 0.02, 0.035, 0.07][fogLevel];
+            }
+            if (typeof settings.soundEnabled === 'boolean') {
+                sounds.enabled = settings.soundEnabled;
+                updateSoundButton();
+            }
+            if (Number.isFinite(settings.resolutionLevel)) setUserResolution(settings.resolutionLevel);
+        }
+
         function saveCurrentPlayerPosition() {
             if (!activeWorld) return;
             activeWorld.lastPos = { x: player.pos.x, y: player.pos.y, z: player.pos.z };
+            activeWorld.playerState = {
+                pos: { x: player.pos.x, y: player.pos.y, z: player.pos.z },
+                yaw: player.yaw,
+                pitch: player.pitch,
+                health: player.health,
+                hunger: player.hunger,
+                isFlying: player.isFlying
+            };
+            activeWorld.settings = getCurrentGameSettings();
+            syncWorldChangesToActiveWorld();
             const idx = savedWorlds.findIndex(w => w.id === activeWorld.id);
             if (idx !== -1) savedWorlds[idx] = activeWorld;
             else savedWorlds.push(activeWorld);
@@ -971,15 +1089,25 @@ function createBreakParticles(x, y, z, colorHex) {
             activeWorld = w;
             const titleEl = document.getElementById('current-world-title');
             if (titleEl) titleEl.innerText = w.name;
+            loadWorldChangesFromActiveWorld();
+            applyWorldSettings(w.settings);
             
             chunks.clear();
             invalidateChunkCache();
             chunkMeshesMap.forEach((list, key) => removeChunkMesh(key));
             chunkMeshesMap.clear();
             chunkBuildQueue = []; chunkBuildQueueSet = new Set();
- 
-            if (w.lastPos) {
-                player.pos.set(w.lastPos.x, w.lastPos.y, w.lastPos.z);
+
+            const savedPlayer = w.playerState || {};
+            const savedPos = savedPlayer.pos || w.lastPos;
+            player.health = Number.isFinite(savedPlayer.health) ? savedPlayer.health : 100;
+            player.hunger = Number.isFinite(savedPlayer.hunger) ? savedPlayer.hunger : 100;
+            player.yaw = Number.isFinite(savedPlayer.yaw) ? savedPlayer.yaw : 0;
+            player.pitch = Number.isFinite(savedPlayer.pitch) ? savedPlayer.pitch : 0;
+            player.isFlying = !!savedPlayer.isFlying;
+
+            if (savedPos) {
+                player.pos.set(savedPos.x, savedPos.y, savedPos.z);
                 const safeY = ensureSafePosition(player.pos.x, player.pos.y, player.pos.z);
                 player.pos.y = safeY;
                 camera.position.copy(player.pos);
@@ -1075,7 +1203,7 @@ function createBreakParticles(x, y, z, colorHex) {
             if (type === BLOCKS.BEDROCK) { showToast("Rocha Matriz não pode ser destruída!"); return; }
             sounds.playBreak(); createBreakParticles(x, y, z, '#888');
             if (type === BLOCKS.TNT) explode(x, y, z);
-            else { setBlock(x, y, z, BLOCKS.AIR); rebuildChunksAroundBlock(x, z); scheduleWaterUpdateAround(x, y, z, 2); }
+            else { setBlock(x, y, z, BLOCKS.AIR, true); saveCurrentPlayerPosition(); rebuildChunksAroundBlock(x, z); scheduleWaterUpdateAround(x, y, z, 2); }
         }
  
         function doPlaceBlock() {
@@ -1084,7 +1212,8 @@ function createBreakParticles(x, y, z, colorHex) {
             const pBox = new THREE.Box3(new THREE.Vector3(player.pos.x - player.radius, player.pos.y - player.height + 0.2, player.pos.z - player.radius), new THREE.Vector3(player.pos.x + player.radius, player.pos.y + 0.2, player.pos.z + player.radius));
             const bBox = new THREE.Box3(new THREE.Vector3(px, py, pz), new THREE.Vector3(px + 1, py + 1, pz + 1));
             if (pBox.intersectsBox(bBox)) return;
-            setBlock(px, py, pz, hotbarSlots[selectedHotbarIndex]);
+            setBlock(px, py, pz, hotbarSlots[selectedHotbarIndex], true);
+            saveCurrentPlayerPosition();
             sounds.playPlace(); rebuildChunksAroundBlock(px, pz); scheduleWaterUpdateAround(px, py, pz, 2);
         }
  
@@ -1096,13 +1225,14 @@ function createBreakParticles(x, y, z, colorHex) {
                     for (let z = Math.floor(cz - 2.5); z <= Math.ceil(cz + 2.5); z++)
                         if (getBlock(x, y, z) !== BLOCKS.BEDROCK && Math.hypot(x - cx, y - cy, z - cz) <= 2.5) {
                             createBreakParticles(x, y, z, '#f43f5e'); 
-                            setBlock(x, y, z, BLOCKS.AIR);
+                            setBlock(x, y, z, BLOCKS.AIR, true);
                             affectedChunks.add(`${Math.floor(x / CHUNK_SIZE)},${Math.floor(z / CHUNK_SIZE)}`);
                         }
             affectedChunks.forEach(cKey => {
                 const [cX, cZ] = cKey.split(',').map(Number);
                 rebuildChunkMesh(cX, cZ);
             });
+            saveCurrentPlayerPosition();
             scheduleWaterUpdateAround(cx, cy, cz, 4);
         }
  
@@ -1217,6 +1347,7 @@ function createBreakParticles(x, y, z, colorHex) {
                 savedWorlds = [{ id: 'world_default', name: 'Mundo Sobrevivência', seed: 'default_1', type: 'normal', biomes: { forest: true, desert: true, snow: true, mountains: true }, lastPos: null }];
                 saveWorldsToStorage();
             }
+            if (savedWorlds[0]) activeWorld = savedWorlds[0];
         }
         function saveWorldsToStorage() { try { localStorage.setItem('mine_everything_worlds', JSON.stringify(savedWorlds)); } catch (e) { console.error(e); } }
  
@@ -1278,17 +1409,32 @@ function createBreakParticles(x, y, z, colorHex) {
             document.getElementById('btn-inventory').addEventListener('click', () => { renderInventory(); document.getElementById('modal-inventory').classList.remove('hidden'); });
             document.getElementById('btn-settings').addEventListener('click', () => document.getElementById('modal-settings').classList.remove('hidden'));
  
-            document.getElementById('sensitivity-slider').addEventListener('input', e => player.sensitivity = (parseFloat(e.target.value) / 5) * 0.004);
-            document.getElementById('render-dist-slider').addEventListener('change', e => {
+            document.getElementById('sensitivity-slider').addEventListener('input', e => {
+                player.sensitivity = (parseFloat(e.target.value) / 5) * 0.004;
+                saveCurrentPlayerPosition();
+            });
+            document.getElementById('render-dist-slider').addEventListener('input', e => {
                 renderRadius = parseInt(e.target.value); rebuildWorldMeshes();
                 showToast(renderRadius >= 6 ? `Alcance ${renderRadius} Chunks (pesado, carregando aos poucos...)` : `Alcance alterado para ${renderRadius} Chunks`);
+                saveCurrentPlayerPosition();
             });
-            document.getElementById('fog-density-slider').addEventListener('input', e => scene.fog.density = [0, 0.01, 0.02, 0.035, 0.07][parseInt(e.target.value)]);
- 
+            const resSlider = document.getElementById('resolution-slider');
+            if (resSlider) {
+                resSlider.addEventListener('input', e => {
+                    setUserResolution(e.target.value);
+                    saveCurrentPlayerPosition();
+                });
+                setUserResolution(resSlider.value);
+            }
+            document.getElementById('fog-density-slider').addEventListener('input', e => {
+                scene.fog.density = [0, 0.01, 0.02, 0.035, 0.07][parseInt(e.target.value)];
+                saveCurrentPlayerPosition();
+            });
+
             document.getElementById('btn-toggle-sound').addEventListener('click', e => {
                 sounds.enabled = !sounds.enabled;
-                e.target.innerText = sounds.enabled ? 'LIGADO' : 'DESLIGADO';
-                e.target.className = sounds.enabled ? 'px-3 py-1 bg-emerald-600/80 rounded-lg text-xs font-bold' : 'px-3 py-1 bg-rose-600/80 rounded-lg text-xs font-bold';
+                updateSoundButton();
+                saveCurrentPlayerPosition();
             });
  
             document.getElementById('btn-save-world').addEventListener('click', () => { saveCurrentPlayerPosition(); showToast("Posição e Mundo salvos com sucesso!"); });
@@ -1321,7 +1467,10 @@ function createBreakParticles(x, y, z, colorHex) {
                         snow: document.getElementById('biome-snow').checked, 
                         mountains: document.getElementById('biome-mountains').checked 
                     },
-                    lastPos: null
+                    lastPos: null,
+                    playerState: null,
+                    settings: getCurrentGameSettings(),
+                    worldChanges: {}
                 };
                 savedWorlds.push(newWorld); saveWorldsToStorage(); loadWorld(newWorld);
                 document.getElementById('modal-worlds').classList.add('hidden'); document.getElementById('start-menu').classList.add('hidden'); showHUD();
@@ -1374,14 +1523,27 @@ function createBreakParticles(x, y, z, colorHex) {
         // OTIMIZAÇÃO: resolução dinâmica (dynamic resolution scaling). Em vez de renderizar
         // sempre na mesma resolução, o jogo mede o FPS a cada segundo e reduz a escala de
         // renderização (devicePixelRatio efetivo) quando o FPS cai, e recupera aos poucos quando
-        // sobra folga. Isso é o que dá o maior salto de FPS em aparelhos fracos, já que reduzir
-        // a quantidade de pixels desenhados por frame é a forma mais direta de aliviar a GPU.
+        // sobra folga. O jogador também pode escolher uma resolução base no menu.
         let dynamicResScale = 1.0;
+        let userResLevel = 10;
+        let userResScale = 1.0;
         const MAX_PIXEL_RATIO = Math.min(window.devicePixelRatio || 1, 1.5);
         const MIN_RES_SCALE = 0.55;
+        const MIN_USER_RES_SCALE = 0.5;
+        const MAX_USER_RES_SCALE = 1.0;
+        const resolutionSliderToScale = value => MIN_USER_RES_SCALE + ((Math.max(1, Math.min(10, value)) - 1) / 9) * (MAX_USER_RES_SCALE - MIN_USER_RES_SCALE);
         function applyDynamicResolution() {
-            renderer.setPixelRatio(MAX_PIXEL_RATIO * dynamicResScale);
+            renderer.setPixelRatio(MAX_PIXEL_RATIO * userResScale * dynamicResScale);
         }
+        function setUserResolution(level) {
+            userResLevel = Math.max(1, Math.min(10, parseInt(level) || 10));
+            userResScale = resolutionSliderToScale(userResLevel);
+            const resValue = document.getElementById('resolution-value');
+            if (resValue) resValue.textContent = String(userResLevel);
+            dynamicResScale = 1.0;
+            applyDynamicResolution();
+        }
+        applyDynamicResolution();
  
         function animate(now) {
             requestAnimationFrame(animate);
