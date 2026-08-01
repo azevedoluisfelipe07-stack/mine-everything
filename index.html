@@ -785,6 +785,10 @@
             waterGeo.setIndex(waterIdx);
             const waterMesh = new THREE.Mesh(waterGeo, getBlockMaterials(BLOCKS.WATER));
             waterMesh.userData.blockType = BLOCKS.WATER; waterMesh.userData.usingFlatMaterial = false;
+            // MESH CONGELADA: mesma otimização já usada nos InstancedMesh dos blocos sólidos
+            // (matrixAutoUpdate = false) — a mesh de água nunca se move depois de construída,
+            // então não há motivo para o Three.js recalcular sua matriz a cada frame.
+            waterMesh.matrixAutoUpdate = false; waterMesh.updateMatrix();
             return waterMesh;
         }
  
@@ -802,6 +806,16 @@
             for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) for (let dz = -r; dz <= r; dz++) scheduleWaterUpdate(x + dx, y + dy, z + dz);
         }
  
+        // ÁGUA TOTALMENTE ESTÁVEL: este sistema já é orientado a eventos, não a varredura — só
+        // existe verificação de física para um bloco de água se ele estiver no Set
+        // pendingWaterUpdates, que só recebe uma entrada quando algo pode ter mudado por perto
+        // (bloco colocado/quebrado/explodido perto dele, ver scheduleWaterUpdate/-Around). Um
+        // bloco de água cercado por outros blocos de água (ou sem vizinho para onde escoar) é
+        // processado no máximo uma vez após ser agendado: como seu nível não muda e nenhum
+        // vizinho pode receber fluxo, o final do tick não reagenda nada para ele nem para os
+        // vizinhos — ele simplesmente some do Set e não gera mais nenhum custo de CPU até que
+        // um bloco vizinho real seja alterado (o que o agenda de novo automaticamente). Ou seja,
+        // "modo de repouso" já é o comportamento padrão daqui, sem precisar de uma flag extra.
         let waterTickTimer = 0;
         function tickWaterSimulation(now) {
             if (pendingWaterUpdates.size === 0) return;
@@ -874,7 +888,17 @@
                 }
             });
  
-            affectedChunks.forEach(cKey => { const [cx, cz] = cKey.split(',').map(Number); rebuildChunkMesh(cx, cz); });
+            // OTIMIZAÇÃO (Frame Budget): antes, todo chunk afetado por uma mudança de água era
+            // reconstruído na hora, no mesmo frame — se uma enchente/vazamento afetasse vários
+            // chunks ao mesmo tempo, todos eram remontados juntos e podiam travar o frame. Agora
+            // reaproveitamos a MESMA fila com orçamento por frame já usada para carregar chunks
+            // novos (queueChunkBuild/processChunkBuildQueue), só que em modo "force" (permite
+            // reconstruir um chunk que já tem mesh). O resultado visual é idêntico, só que
+            // distribuído ao longo de alguns frames em vez de um só.
+            if (affectedChunks.size) {
+                const pCX = Math.floor(player.pos.x / CHUNK_SIZE), pCZ = Math.floor(player.pos.z / CHUNK_SIZE);
+                affectedChunks.forEach(cKey => { const [cx, cz] = cKey.split(',').map(Number); queueChunkBuild(cx, cz, pCX, pCZ, true); });
+            }
         }
  
         // OTIMIZAÇÃO: fila de construção de chunks com orçamento de tempo por frame.
@@ -886,11 +910,15 @@
         const CHUNK_BUILD_TIME_BUDGET_MS = 6;
         const CHUNK_BUILD_MAX_PER_FRAME = 3;
  
-        function queueChunkBuild(cx, cz, pCX, pCZ) {
+        // "force" permite reaproveitar esta MESMA fila/orçamento por frame para reconstruções
+        // de chunks que já têm mesh (ex.: água mudou dentro do chunk), e não só para a
+        // construção inicial — evita duplicar o controle de orçamento em outro sistema.
+        function queueChunkBuild(cx, cz, pCX, pCZ, force = false) {
             const key = getChunkKey(cx, cz);
-            if (chunkMeshesMap.has(key) || chunkBuildQueueSet.has(key)) return;
+            if (chunkBuildQueueSet.has(key)) return;
+            if (!force && chunkMeshesMap.has(key)) return;
             chunkBuildQueueSet.add(key);
-            chunkBuildQueue.push({ cx, cz, key, dist: Math.hypot(cx - pCX, cz - pCZ) });
+            chunkBuildQueue.push({ cx, cz, key, dist: Math.hypot(cx - pCX, cz - pCZ), force });
         }
  
         function processChunkBuildQueue() {
@@ -901,7 +929,7 @@
             while (chunkBuildQueue.length > 0 && built < CHUNK_BUILD_MAX_PER_FRAME && (performance.now() - start) < CHUNK_BUILD_TIME_BUDGET_MS) {
                 const item = chunkBuildQueue.shift();
                 chunkBuildQueueSet.delete(item.key);
-                if (!chunkMeshesMap.has(item.key)) { rebuildChunkMesh(item.cx, item.cz); built++; }
+                if (item.force || !chunkMeshesMap.has(item.key)) { rebuildChunkMesh(item.cx, item.cz); built++; }
             }
         }
  
@@ -934,7 +962,23 @@
         // grandes (6-10 chunks), onde só uma fração dos chunks carregados está realmente à vista.
         const _camDir = new THREE.Vector3(), _toChunk = new THREE.Vector3();
         let lodFlatChunkCount = 0;
-        function updateChunkVisibility() {
+
+        // ATUALIZAÇÃO INTELIGENTE POR DISTÂNCIA: recalcular visibilidade/LOD de TODO chunk
+        // carregado em TODO frame fica caro com raios de renderização grandes (centenas de
+        // chunks, vários meshes cada). Chunks longe do jogador não precisam dessa precisão a
+        // 60fps — a mudança de "o que está atrás da câmera" a essa distância é imperceptível
+        // de um frame para o outro. Por isso, perto do jogador o recálculo continua em todo
+        // frame; a partir de CHUNK_VIS_MID_DIST cai para ~15 vezes/seg; a partir de
+        // CHUNK_VIS_FAR_DIST cai para ~1 vez/seg. O último resultado (visível/LOD) fica
+        // guardado no próprio array de meshes do chunk (reaproveita a estrutura que já existe
+        // em chunkMeshesMap, sem precisar de um Map paralelo novo).
+        const CHUNK_VIS_MID_DIST = 20, CHUNK_VIS_FAR_DIST = 40;
+        const CHUNK_VIS_MID_DIST_SQ = CHUNK_VIS_MID_DIST * CHUNK_VIS_MID_DIST;
+        const CHUNK_VIS_FAR_DIST_SQ = CHUNK_VIS_FAR_DIST * CHUNK_VIS_FAR_DIST;
+        const CHUNK_VIS_MID_INTERVAL_MS = 66;  // ~15 atualizações/seg
+        const CHUNK_VIS_FAR_INTERVAL_MS = 1000; // ~1 atualização/seg
+
+        function updateChunkVisibility(now) {
             if (chunkMeshesMap.size === 0) return;
             let flatCount = 0;
             // O culling por direção de câmera só entra em ação com raios de renderização
@@ -951,6 +995,21 @@
                 const centerX = ckx * CHUNK_SIZE + CHUNK_SIZE / 2, centerZ = ckz * CHUNK_SIZE + CHUNK_SIZE / 2;
                 const dx = centerX - player.pos.x, dz = centerZ - player.pos.z;
                 const distSq = dx * dx + dz * dz;
+
+                // Fora da faixa "perto", só refaz o trabalho pesado (loop nos meshes do chunk)
+                // quando o intervalo da camada correspondente já passou; enquanto isso, mantém
+                // o último estado calculado (visível + material) exatamente como estava.
+                if (distSq > CHUNK_VIS_MID_DIST_SQ) {
+                    const interval = distSq > CHUNK_VIS_FAR_DIST_SQ ? CHUNK_VIS_FAR_INTERVAL_MS : CHUNK_VIS_MID_INTERVAL_MS;
+                    if (meshes._nextVisUpdate !== undefined && now < meshes._nextVisUpdate) {
+                        if (meshes._useFlatCached) flatCount++;
+                        return;
+                    }
+                    meshes._nextVisUpdate = now + interval;
+                } else {
+                    meshes._nextVisUpdate = undefined;
+                }
+
                 let visible = true;
                 if (cullByDirection && camDirValid && distSq > (CHUNK_SIZE * 1.5) ** 2) {
                     _toChunk.set(dx, 0, dz).normalize();
@@ -960,6 +1019,7 @@
                 // para material de cor sólida (sem textura). Troca só o material do mesh já
                 // existente — não reconstrói geometria nem chunk.
                 const useFlat = distSq > NO_TEXTURE_DISTANCE_SQ;
+                meshes._useFlatCached = useFlat;
                 if (useFlat) flatCount++;
                 for (let i = 0; i < meshes.length; i++) {
                     const m = meshes[i];
@@ -1710,9 +1770,20 @@ function createBreakParticles(x, y, z, colorHex) {
  
             starsMat.opacity = Math.max(0, Math.min(1, (0.45 - dayFactor) * 2.5));
  
+            // ATUALIZAÇÃO EM CICLOS: em vez de forçar cada sistema pesado a rodar num frame fixo
+            // (A/B/C/D), cada um já se auto-limita com seu próprio intervalo, então na prática
+            // eles raramente fazem trabalho pesado todos no mesmo frame: updatePlayerPhysics
+            // precisa rodar sempre (movimento); updateRaycast só recalcula a cada 2 frames;
+            // updateParticles é barato (pool fixo, só physics simples); tickWaterSimulation só
+            // processa a cada 300ms e só blocos pendentes; processChunkBuildQueue tem orçamento
+            // de tempo/quantidade por frame (inclui reconstruções de água, ver queueChunkBuild);
+            // updateChunkVisibility agora só refaz o trabalho pesado por chunk conforme a
+            // distância (perto: todo frame, médio: ~15/s, longe: ~1/s). O resultado é o mesmo
+            // objetivo do ciclo A/B/C/D — nenhum sistema satura um frame sozinho — mas adaptado
+            // à real necessidade de cada um em vez de um rodízio fixo.
             updatePlayerPhysics(); updateRaycast(); updateParticles(); tickWaterSimulation(now);
             processChunkBuildQueue();
-            updateChunkVisibility();
+            updateChunkVisibility(now);
  
             const camX = Math.floor(camera.position.x), camY = Math.floor(camera.position.y), camZ = Math.floor(camera.position.z);
             const overlay = document.getElementById('underwater-overlay');
