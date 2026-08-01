@@ -145,7 +145,7 @@
                 <button id="btn-jump" class="glass-panel w-16 h-16 rounded-full flex items-center justify-center text-white active:bg-white/30 transition-all border-2 border-white/40 text-2xl font-bold shadow-xl"><i class="fa-solid fa-arrow-up"></i></button>
  
                 <!-- Seta para baixo (Descender) posicionada debaixo da seta para cima e ampliada -->
-                <button id="btn-descend" class="glass-panel w-16 h-16 rounded-full flex items-center justify-center text-rose-300 active:bg-rose-500/30 transition-all border-2 border-white/40 text-2xl font-bold shadow-xl opacity-40 pointer-events-none"><i class="fa-solid fa-arrow-down"></i></button>
+                <button id="btn-descend" class="glass-panel w-16 h-16 rounded-full flex items-center justify-center text-rose-300 active:bg-rose-500/30 transition-all border-2 border-white/40 text-2xl font-bold shadow-xl opacity-40 pointer-events-auto"><i class="fa-solid fa-arrow-down"></i></button>
             </div>
         </div>
     </div>
@@ -1600,8 +1600,7 @@ function createBreakParticles(x, y, z, colorHex) {
  
             const btnJump = document.getElementById('btn-jump');
             const btnDescend = document.getElementById('btn-descend');
- 
-            const startJump = e => { e.preventDefault(); isJumpPressed = true; };
+              const startJump = e => { e.preventDefault(); isJumpPressed = true; };
             const stopJump = e => { e.preventDefault(); isJumpPressed = false; };
             btnJump.addEventListener('touchstart', startJump, { passive: false });
             btnJump.addEventListener('touchend', stopJump);
@@ -1610,21 +1609,23 @@ function createBreakParticles(x, y, z, colorHex) {
  
             const startDescend = e => { e.preventDefault(); isDescendPressed = true; };
             const stopDescend = e => { e.preventDefault(); isDescendPressed = false; };
-            btnDescend.addEventListener('click', startDescend, { passive: false });
+            btnDescend.addEventListener('touchstart', startDescend, { passive: false });
             btnDescend.addEventListener('touchend', stopDescend);
             btnDescend.addEventListener('mousedown', startDescend);
             btnDescend.addEventListener('mouseup', stopDescend);
- 
+            btnDescend.addEventListener("touchstart", () => {
+    console.log("clicou");
+       });
             document.getElementById('btn-fly').addEventListener('click', () => {
                 player.isFlying = !player.isFlying;
                 const flyBtn = document.getElementById('btn-fly');
                 if (player.isFlying) { 
                     flyBtn.classList.add('bg-cyan-500/50', 'border-cyan-300');
-                    btnDescend.classList.remove('opacity-40', 'pointer-events-none');
+                    btnDescend.classList.remove('opacity-40');
                     showToast("Modo Voo Ativado"); 
                 } else { 
                     flyBtn.classList.remove('bg-cyan-500/50', 'border-cyan-300');
-                    btnDescend.classList.add('opacity-40', 'pointer-events-none');
+                    btnDescend.classList.add('opacity-40');
                     showToast("Modo Voo Desativado"); 
                 }
             });
