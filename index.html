@@ -1730,8 +1730,8 @@ function createBreakParticles(x, y, z, colorHex) {
             frameCount++;
             if (now - lastFrameTime >= 1000) {
                 fps = frameCount; frameCount = 0; lastFrameTime = now;
-                const fpsEl = document.getElementById('fps-display');
-                if (fpsEl) fpsEl.innerHTML = `FPS: ${fps} &bull; Chunks: ${chunkMeshesMap.size} &bull; Sem textura: ${lodFlatChunkCount} &bull; Água dormindo: ${pendingWaterUpdates.size}`;
+     const fpsEl = document.getElementById('fps-display');
+     if (fpsEl) fpsEl.innerHTML = `FPS: ${fps}`;
  
                 if (fps < 45 && dynamicResScale > MIN_RES_SCALE) {
                     dynamicResScale = Math.max(MIN_RES_SCALE, dynamicResScale - 0.1);
