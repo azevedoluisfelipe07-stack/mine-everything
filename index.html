@@ -110,7 +110,7 @@
         <div class="glass-panel px-3 py-1.5 rounded-xl text-xs flex flex-col gap-0.5 pointer-events-auto border border-white/20 shadow-lg">
             <div class="font-bold text-amber-400 flex items-center gap-1.5"><i class="fa-solid font-black fa-cube text-xs"></i> <span id="current-world-title">Mundo</span></div>
             <div class="text-[10px] text-gray-300 font-mono" id="pos-display">X: 0 | Y: 0 | Z: 0</div>
-            <div class="text-[10px] text-emerald-400 font-mono" id="fps-display">FPS: 60 &bull; Chunks: 0</div>
+            <div class="text-[10px] text-emerald-400 font-mono" id="fps-display">FPS:  99999 &bull; Chunks: 0</div>
         </div>
         <div class="flex gap-2 pointer-events-auto">
             <button id="btn-time" class="glass-panel w-10 h-10 rounded-xl flex items-center justify-center text-amber-300 active:scale-95 transition-transform border border-white/20 shadow-md"><i class="fa-solid fa-sun text-lg"></i></button>
@@ -433,6 +433,11 @@
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+        // SOMBRAS: PCFShadowMap é bem mais barato que PCFSoftShadowMap/VSM e já suaviza as
+        // bordas o suficiente para um visual "voxel" — mantém o espírito das otimizações
+        // anteriores (priorizar custo baixo em hardware fraco/mobile).
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
  
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x78a7ff);
@@ -441,6 +446,26 @@
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); scene.add(ambientLight);
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.85); dirLight.position.set(60, 120, 40); scene.add(dirLight);
+        // SOMBRAS: o sol (dirLight) orbita o jogador a uma distância fixa de 200 unidades (ver
+        // celestialGroup mais abaixo) e o alvo da luz acompanha o jogador a cada frame, então a
+        // câmera de sombra (ortográfica) fica sempre centrada nele. O frustum é propositalmente
+        // pequeno — sombra não precisa cobrir todo o alcance de renderização, só a vizinhança
+        // imediata do jogador, o que mantém a resolução do shadow map (mapSize) útil em vez de
+        // esparramada por uma área enorme. SHADOW_FRUSTUM_HALF_SIZE também é usado em
+        // updateChunkVisibility para não esconder (culling por direção) nenhum chunk que ainda
+        // possa estar projetando sombra dentro dessa área.
+        const SHADOW_FRUSTUM_HALF_SIZE = 48;
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        dirLight.shadow.camera.near = 50;
+        dirLight.shadow.camera.far = 300;
+        dirLight.shadow.camera.left = -SHADOW_FRUSTUM_HALF_SIZE;
+        dirLight.shadow.camera.right = SHADOW_FRUSTUM_HALF_SIZE;
+        dirLight.shadow.camera.top = SHADOW_FRUSTUM_HALF_SIZE;
+        dirLight.shadow.camera.bottom = -SHADOW_FRUSTUM_HALF_SIZE;
+        dirLight.shadow.bias = -0.0015;
+        scene.add(dirLight.target);
  
         const celestialGroup = new THREE.Group(); scene.add(celestialGroup);
  
@@ -741,11 +766,15 @@
                 }
                 mesh.instanceMatrix.needsUpdate = true;
                 mesh.matrixAutoUpdate = false;
+                mesh.castShadow = true; mesh.receiveShadow = true;
                 scene.add(mesh); newMeshes.push(mesh);
             });
  
             const waterMesh = buildChunkWaterMesh(cx, cz);
-            if (waterMesh) { scene.add(waterMesh); newMeshes.push(waterMesh); }
+            // A água só RECEBE sombra (mostra o bloco em cima dela sombreado); ela não CASTA
+            // sombra própria — evita artefatos de sombra através da superfície transparente e
+            // economiza uma passada de shadow map para uma geometria que muda com frequência.
+            if (waterMesh) { waterMesh.receiveShadow = true; scene.add(waterMesh); newMeshes.push(waterMesh); }
  
             chunkMeshesMap.set(key, newMeshes); updateRaycastTargets();
         }
@@ -977,6 +1006,10 @@
         const CHUNK_VIS_FAR_DIST_SQ = CHUNK_VIS_FAR_DIST * CHUNK_VIS_FAR_DIST;
         const CHUNK_VIS_MID_INTERVAL_MS = 66;  // ~15 atualizações/seg
         const CHUNK_VIS_FAR_INTERVAL_MS = 1000; // ~1 atualização/seg
+        // Distância mínima original do culling por direção (24 blocos) OU o alcance do frustum
+        // de sombra, o que for maior — assim a introdução de sombras nunca faz um chunk que
+        // ainda pode projetar sombra sumir por estar atrás da câmera.
+        const CHUNK_CULL_MIN_DIST_SQ = Math.max((CHUNK_SIZE * 1.5) ** 2, SHADOW_FRUSTUM_HALF_SIZE ** 2);
 
         function updateChunkVisibility(now) {
             if (chunkMeshesMap.size === 0) return;
@@ -1011,7 +1044,12 @@
                 }
 
                 let visible = true;
-                if (cullByDirection && camDirValid && distSq > (CHUNK_SIZE * 1.5) ** 2) {
+                // SOMBRAS: mesh.visible = false também tira o chunk da passagem de sombra do
+                // Three.js. Por isso o culling por direção só se aplica além do raio do frustum
+                // de sombra (CHUNK_CULL_MIN_DIST_SQ) — do contrário um chunk atrás da câmera
+                // mas dentro do alcance da sombra poderia sumir com a sombra que ele projeta
+                // sobre um chunk visível à frente.
+                if (cullByDirection && camDirValid && distSq > CHUNK_CULL_MIN_DIST_SQ) {
                     _toChunk.set(dx, 0, dz).normalize();
                     visible = _toChunk.dot(_camDir) > minDot;
                 }
@@ -1674,7 +1712,6 @@ function createBreakParticles(x, y, z, colorHex) {
             btnDescend.addEventListener('mousedown', startDescend);
             btnDescend.addEventListener('mouseup', stopDescend);
             btnDescend.addEventListener("touchstart", () => {
-    console.log("clicou");
        });
             document.getElementById('btn-fly').addEventListener('click', () => {
                 player.isFlying = !player.isFlying;
@@ -1730,8 +1767,8 @@ function createBreakParticles(x, y, z, colorHex) {
             frameCount++;
             if (now - lastFrameTime >= 1000) {
                 fps = frameCount; frameCount = 0; lastFrameTime = now;
-     const fpsEl = document.getElementById('fps-display');
-     if (fpsEl) fpsEl.innerHTML = `FPS: ${fps}`;
+                const fpsEl = document.getElementById('fps-display');
+                if (fpsEl) fpsEl.innerHTML = `FPS: ${fps}`;
  
                 if (fps < 45 && dynamicResScale > MIN_RES_SCALE) {
                     dynamicResScale = Math.max(MIN_RES_SCALE, dynamicResScale - 0.1);
@@ -1759,6 +1796,7 @@ function createBreakParticles(x, y, z, colorHex) {
             const sunWorldPos = new THREE.Vector3();
             sunMesh.getWorldPosition(sunWorldPos);
             dirLight.position.copy(sunWorldPos);
+            dirLight.target.position.copy(player.pos);
  
             const sunY = sunWorldPos.y - player.pos.y;
             const dayFactor = Math.max(0, Math.min(1, (sunY + 40) / 200));
